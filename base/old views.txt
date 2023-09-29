@@ -1,0 +1,434 @@
+from django.shortcuts import render, redirect
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.urls import reverse
+from django.template.loader import render_to_string
+from datetime import date
+from .models import *
+from .forms import *
+import os, tempfile, zipfile, json, requests
+from pydub import AudioSegment
+
+def audio_list(request):
+    # matching_audio_files = AudioFile.objects.filter(audio_file__startswith='0_+1')
+    # matching_audio_files.update(category='Indian')
+    # remaining_audio_files = AudioFile.objects.exclude(audio_file__startswith='0_+1')
+    # remaining_audio_files.update(category='Philippino')
+    # AudioFile.objects.all().delete()
+
+    # json_file_path = os.path.join(settings.BASE_DIR, 'db.json')
+
+    # with open(json_file_path, 'r') as json_file:
+    #     data = json.load(json_file)
+    #     for entry in data:
+    #         if entry['model'] == "base.audiofile":
+    #             audio_file = AudioFile(
+    #                 user = User.objects.get(id=2),
+    #                 title = entry['fields'].get('text', '') ,
+    #                 audio_file =  entry['fields'].get('audio_file', ''),
+    #                 old_id = entry['pk'],
+    #                 uploaded_at =entry['fields'].get('uploaded_at', ''),
+    #             )
+    #             audio_file.save()
+    # Transcription.objects.all().delete()
+
+    # with open(json_file_path, 'r') as json_file:
+    #     data = json.load(json_file)
+    #     for entry in data:
+    #         if entry['model'] == "base.transcription":
+    #             transcription = Transcription.objects.get_or_create(
+    #                 status = entry['fields'].get('status', '') ,
+    #                 audio_file = AudioFile.objects.get(old_id=entry['fields'].get('audio_file', '')),
+    #                 text=entry['fields'].get('text', '') ,
+    #                 old_audio_id = entry['fields'].get('audio_file', '') ,
+    #             )
+    #             # transcription.save()
+    
+    # audio_files_without_transcription = AudioFile.objects.filter(transcription__isnull=True)
+
+    # for audio_file in audio_files_without_transcription:
+    #     print(f"Audio File without Transcription: {audio_file.id}")
+    #Get all audiofiles and store them in db
+    # path = os.path.join(settings.BASE_DIR, 'static/images/audio')
+    # dir_list = os.listdir(path)
+    
+    # # print("Files and directories in '", path, "' :")
+    # # AudioFile.objects.all().delete()
+
+    # for thing in dir_list:
+    #     AudioFile.objects.create(audio_file=thing, user=request.user)
+
+
+    #get respecting transcripts for audio files
+    # csv_file_path = os.path.join(settings.BASE_DIR, 'AloricaLG-1.csv')
+    # with open(csv_file_path, 'r') as csv_file:
+    #     reader = csv.DictReader(csv_file)
+    #     for row in reader:
+    #         utterance_transcription = row['\ufeffutteranceTranscription']
+    #         filename = row['filename']
+            
+    #         try:
+    #             audio_file = AudioFile.objects.get(audio_file=filename)
+    #             # Transcription.objects.all().delete()
+    #             transcription, created = Transcription.objects.get_or_create(
+    #                 audio_file=audio_file,
+    #                 defaults={'text': utterance_transcription}
+    #             )
+    #             if not created:
+    #                 transcription.text = utterance_transcription
+    #                 transcription.save()
+
+    #         except AudioFile.DoesNotExist:
+    #             pass  # Handle if audio file not found
+            
+    # csv_file_path = os.path.join(settings.BASE_DIR, 'Wyndham-1.csv')
+    # with open(csv_file_path, 'r') as csv_file:
+    #     reader = csv.DictReader(csv_file)
+    #     for row in reader:
+    #         utterance_transcription = row['\ufeffutteranceTranscription']
+    #         filename = row['filename']
+            
+    #         try:
+    #             audio_file = AudioFile.objects.get(audio_file=filename)
+    #             # Transcription.objects.all().delete()
+    #             transcription, created = Transcription.objects.get_or_create(
+    #                 audio_file=audio_file,
+    #                 defaults={'text': utterance_transcription}
+    #             )
+    #             if not created:
+    #                 transcription.text = utterance_transcription
+    #                 transcription.save()
+
+    #         except AudioFile.DoesNotExist:
+    #             pass  # Handle if audio file not found
+    if request.user.groups.filter(name='reviewers').exists():
+        print("hi")
+        transcribers = User.objects.filter(groups__name='transcribers')
+        selected_status = request.GET.get('status', '')
+        # audio_files = AudioFile.objects.all().order_by("-id")
+        audio_files = AudioFile.objects.all().filter(uploaded_by=request.user).order_by("-id")
+        print(audio_files.count())
+        if not selected_status:
+            audio_files = AudioFile.objects.all().filter(uploaded_by=request.user).order_by("-id")
+        else:
+            if selected_status != "unverified"  :
+                audio_files = audio_files.filter(transcription__status=selected_status).order_by("-id")
+            elif selected_status == "unverified":
+                audio_files = audio_files.filter(Q(transcription__status = "") | Q(transcription__status="unverified")).order_by("-id")
+            
+        page_number = request.GET.get('page')
+        paginator = Paginator(audio_files, 60)  # Show 10 audio files per page
+        audio_files = paginator.get_page(page_number)
+        edit_log  = TranscriptionEditLog.objects.all().first()
+        return render(request, 'base/audio_list_reviewers.html', {'audio_files': audio_files,'selected_status':selected_status,'editlog':edit_log,'transcribers':transcribers})
+    elif request.user.groups.filter(name='transcribers').exists():
+        print("bye")
+        selected_status = request.GET.get('status', '')
+        audio_files = AudioFile.objects.all().filter(assigned_to=request.user).order_by("-id")
+        if not selected_status:
+            audio_files = AudioFile.objects.all().filter(assigned_to=request.user).order_by("-id")
+        else:
+            if selected_status != "unverified"  :
+                audio_files = audio_files.filter(transcription__status=selected_status).order_by("-id")
+            elif selected_status == "unverified":
+                audio_files = audio_files.filter(Q(transcription__status = "") | Q(transcription__status="unverified")).order_by("-id")
+            
+        page_number = request.GET.get('page')
+        paginator = Paginator(audio_files, 10)  # Show 10 audio files per page
+        audio_files = paginator.get_page(page_number)
+        edit_log  = TranscriptionEditLog.objects.all().first()
+        return render(request, 'base/audio_list_transcribers.html', {'audio_files': audio_files,'selected_status':selected_status,'editlog':edit_log})
+    else:
+        print("bdk shay")
+        return render(request, 'base/audio_list_transcribers.html', )
+
+
+
+# def testing(request):
+    # import requests
+
+    # headers = {
+    #     'x-gladia-key': 'cced7398-af32-456d-959a-7bad6e486c33',
+    # }
+    # audiof = AudioFile.objects.get(id=13016)
+    # audio_path = audiof.audio_file.path
+    # files = {
+    #     'audio_url': (None, 'http://app.tal2text.com/images/0_%2B12055450296_by_sr.worsin%40tpindia_%40_5_38_17%20PM_F7CA168D2E7941DCBA81F19CA9A2AEEB-125120000000-6790000000.wav'),
+    #     'language_behaviour': (None, 'automatic single language'),
+    #     'toggle_chapterization': (None, 'false'),
+    #     'toggle_diarization': (None, 'true'),
+    #     'toggle_direct_translate': (None, 'false'),
+    #     'toggle_noise_reduction': (None, 'false'),
+    #     'toggle_summarization': (None, 'false'),
+    #     'toggle_text_emotion_recognition': (None, 'false'),
+    # }
+
+    # response = requests.post('https://api.gladia.io/audio/text/audio-transcription/', headers=headers, files=files)
+    # # print(response.json())
+    # response_json = response.json()
+    # # Extract and concatenate words
+    # concatenated_words = []
+    # if 'prediction' in response_json:
+    #     for prediction in response_json['prediction']:
+    #         if 'words' in prediction:
+    #             word_list = prediction['words']
+    #             concatenated_words.extend([word['word'] for word in word_list])
+    
+    # # Join the words into a single string
+    # result_text = ''.join(concatenated_words)
+    
+    # print(result_text)
+    # return render(request, 'base/test.html', )
+
+def upload_audio(request):
+    if request.method == 'POST':
+        form = AudioFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            audio = form.save(commit=False)
+            audio.user = request.user
+            audio.save()
+            return redirect('audio_list')
+    else:
+        form = AudioFileForm()
+    return render(request, 'base/upload_audio.html', {'form': form})
+
+def test(request):
+    start_id = 12216
+    end_id = 13016
+
+    # Query the database to get audio files within the specified range of IDs
+    audio_files = AudioFile.objects.filter(id__range=(start_id, end_id))
+
+    total_duration_seconds = 0.0
+
+    for audio in audio_files:
+        if audio.audio_file:
+            # Calculate the duration of each audio file and add it to the total
+            audio_segment = AudioSegment.from_file(audio.audio_file.path)
+            total_duration_seconds += audio_segment.duration_seconds
+
+    # Convert the total duration to a more human-readable format (e.g., hours, minutes, seconds)
+    total_duration = str(int(total_duration_seconds // 3600)).zfill(2) + ":" + str(int((total_duration_seconds // 60) % 60)).zfill(2) + ":" + str(int(total_duration_seconds % 60)).zfill(2)
+
+    print(f"Total duration of audio files between IDs {start_id} and {end_id}: {total_duration}")
+
+    return render(request, 'base/upload_audio.html')
+
+def update_transcription(request, audio_id):
+    if request.method == 'POST':
+        new_transcription = request.POST.get('newTranscription')
+        # Update the transcription for the specified audio_id
+        try:
+            audio = AudioFile.objects.get(id=audio_id)
+            user = User.objects.get(id=2)
+            if audio.transcription.edit_log is None:
+            # Create a new edit log entry if it doesn't exist
+                edit_log, created = TranscriptionEditLog.objects.get_or_create(user=user, edit_date=date.today())
+                audio.transcription.edit_log = edit_log
+                audio.transcription.save()
+            else:
+                edit_log = audio.transcription.edit_log
+            
+            if audio.transcription.text == new_transcription:
+                if audio.transcription.status == "BAD":
+                    audio.transcription.edited = True
+                    audio.transcription.status = "BAD"
+                elif audio.transcription.status == 'unverified':
+                    audio.transcription.edited = None
+                    audio.transcription.status = "unverified"
+                else:
+                    audio.transcription.edited = False
+                    audio.transcription.status = "GOOD"
+                    edit_log.num_edits += 1
+                    edit_log.save()
+
+            else:
+                audio.transcription.edited = True
+                audio.transcription.status = "BAD"
+                edit_log.num_edits += 1
+                edit_log.save()
+            audio.transcription.text = new_transcription
+            audio.transcription.save()
+            
+            # edit_log.num_edits += 1
+            # edit_log.save()
+            return JsonResponse({'success': True})
+        except AudioFile.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Audio not found'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+    
+def transcribe_audio(request, audio_id):
+    audio = AudioFile.objects.get(id=audio_id)
+
+    form = TranscriptionForm(request.POST or None)
+    if form.is_valid():
+        transcription_text = form.cleaned_data['transcription']
+        # Save the transcription, you can use the 'audio' object to link it
+        Transcription.objects.create(audio_file=audio, text=transcription_text)
+
+    context = {'audio': audio, 'form': form}
+    return render(request, 'base/transcribe_audio.html', context)
+
+
+@login_required  # Ensure the user is authenticated
+def upload_transcription(request):
+    if request.method == 'POST':
+        form = UploadTranscriptionForm(request.POST, request.FILES)
+        if form.is_valid():
+            audio = AudioFile.objects.create(user=request.user, audio_file=form.cleaned_data['audio_file'])
+            transcription_text = form.cleaned_data['transcription']
+            Transcription.objects.create(audio_file=audio, text=transcription_text)
+            return redirect('audio_list')  # Redirect to audio list page after successful upload and transcription
+    else:
+        form = UploadTranscriptionForm()
+    return render(request, 'base/upload_transcription.html', {'form': form})
+
+
+def upload_multiple_audio(request):
+    if request.method == 'POST':
+        form = UploadTranscriptionForm(request.POST, request.FILES)
+        if form.is_valid():
+            transcriber_id = form.cleaned_data['transcriber']
+            audio_files = request.FILES.getlist('audio_files')
+            assigned_who = User.objects.get(id=transcriber_id)
+            for audio_file in audio_files:
+                if isinstance(audio_file, InMemoryUploadedFile):
+                    audio = AudioFile.objects.create(audio_file=audio_file, assigned_to=assigned_who, uploaded_by=request.user)
+            return HttpResponseRedirect(reverse('audio_list'))
+        else:
+            print(form.errors)
+    else:
+        form = UploadTranscriptionForm()
+    return render(request, 'base/audio_list_reviewers.html', {'audio_files': AudioFile.objects.all(), 'form': form})
+
+
+def transcribe_audio(audio_url):
+
+
+    headers = {
+        'x-gladia-key': 'bbcbc0bf-8287-419d-a12c-e6b2bf8f7760',
+    }
+
+    files = {
+        'audio_url': (None, "https://app.tal2text.com"+audio_url),
+        'language_behaviour': (None, 'automatic single language'),
+        'toggle_chapterization': (None, 'false'),
+        'toggle_diarization': (None, 'true'),
+        'toggle_direct_translate': (None, 'false'),
+        'toggle_noise_reduction': (None, 'false'),
+        'toggle_summarization': (None, 'false'),
+        'toggle_text_emotion_recognition': (None, 'false'),
+    }
+
+    response = requests.post('https://api.gladia.io/audio/text/audio-transcription/', headers=headers, files=files)
+    response_json = response.json()
+    print("Response Status Code:", response.status_code)
+    print("Response Headers:", response.headers)
+    print("Response Content:")
+    print(response.text)    # Extract and concatenate words
+    concatenated_words = []
+    if 'prediction' in response_json:
+        for prediction in response_json['prediction']:
+            if 'transcription' in prediction:
+                result_text = prediction['transcription']
+                # concatenated_words.extend([word['word'] for word in word_list])
+    
+    # Join the words into a single string
+    # result_text = prediction['transcription']
+    print(result_text)
+    return result_text
+
+
+def testing(request):
+    # Retrieve audio URLs and related AudioFile objects from the database
+    audio_files = AudioFile.objects.all()[:5]
+
+    transcriptions = {}
+    
+    for audio_file in audio_files:
+        audio_url = audio_file.audio_file.url
+        result_text = transcribe_audio(audio_url)
+        transcriptions[audio_url] = result_text
+    
+    # You now have a dictionary where keys are audio URLs and values are transcriptions
+    # You can associate these transcriptions with the corresponding AudioFile objects
+    
+    for audio_url, result_text in transcriptions.items():
+        audiof = AudioFile.objects.filter(audio_file__icontains=audio_url).first()
+        if audiof:
+            # Create or update a Transcription object associated with the AudioFile
+            transcription, created = Transcription.objects.get_or_create(audio_file=audiof)
+            transcription.text = result_text
+            transcription.save()
+
+    return render(request, 'base/test.html')
+
+
+def export_transcriptions(request):
+
+    # Get the path to the user's Downloads directory
+    downloads_dir = os.path.expanduser('~/Downloads')
+
+    # Create a temporary directory inside the Downloads directory
+    temp_dir = tempfile.mkdtemp(dir=downloads_dir)
+
+    # Get all transcriptions with non-empty text
+    transcriptions = Transcription.objects.exclude(text='').filter(audio_file__id__range=(11877, 13016))
+
+    # Create a text file for each transcription
+    for transcription in transcriptions:
+        file_name = f"{transcription.audio_file.audio_file.name}.txt"
+        file_path = os.path.join(temp_dir, file_name)
+        
+        with open(file_path, 'w') as file:
+            # file.write(f"Audio File Name: {transcription.audio_file.audio_file.name}\n")
+            file.write(f"{transcription.text}\n")
+
+    # Create a ZIP file containing all the text files
+    zip_file_path = os.path.join(temp_dir, 'transcriptions.zip')
+    with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+        for root, _, files in os.walk(temp_dir):
+            for file in files:
+                zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), temp_dir))
+
+    # Serve the ZIP file for download
+    with open(zip_file_path, 'rb') as zip_file:
+        response = HttpResponse(zip_file.read(), content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename=transcriptions.zip'
+
+    # Clean up the temporary directory
+    os.remove(zip_file_path)
+    os.rmdir(temp_dir)
+
+    return response
+
+
+# def update_transcript_status(request, audio_id):
+#     if request.method == 'POST':
+        
+#         transcript = Transcription.objects.get(audio_file__id=audio_id)
+#         if transcript.edit_log is None:
+#         # Create a new edit log entry if it doesn't exist
+#             edit_log = TranscriptionEditLog.objects.create(user=request.user, edit_date=date.today())
+#             transcript.edit_log = edit_log
+#         else:
+#             edit_log = transcript.edit_log
+#         status = request.POST.get('status')
+        
+#         transcript.status = status
+#         transcript.save()
+        
+#         edit_log.num_edits += 1
+#         edit_log.save()
+
+#         return JsonResponse({'success': True})
+
+#     return JsonResponse({'success': False})
+

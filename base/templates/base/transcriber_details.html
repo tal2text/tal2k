@@ -1,0 +1,257 @@
+{% extends 'base/base.html' %} {% block content %} <style>
+  body {
+    background-color: #fcfcfc !important;
+  }
+
+  .card {
+    --bs-card-spacer-y: 1rem;
+    --bs-card-spacer-x: 1rem;
+    --bs-card-title-spacer-y: 0.5rem;
+    --bs-card-border-width: 1px;
+    --bs-card-border-color: #F1F1F2;
+    --bs-card-border-radius: 0.625rem;
+    --bs-card-box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.03);
+    --bs-card-inner-border-radius: calc(0.625rem - 1px);
+    --bs-card-cap-padding-y: 0.5rem;
+    --bs-card-cap-padding-x: 1rem;
+    --bs-card-cap-bg: transparent;
+    --bs-card-bg: #ffffff;
+    --bs-card-img-overlay-padding: 1rem;
+    --bs-card-group-margin: 0.75rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    color: #071437;
+    word-wrap: break-word;
+    background-color: #ffffff;
+    background-clip: border-box;
+    border: 1px solid #F1F1F2;
+    border-radius: 0.625rem;
+    box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.03);
+  }
+
+  td {
+    height: auto !important;
+  }
+  audio{
+    height:30px !important;
+  }
+</style>
+<nav class="navbar navbar-light bg-light d-flex p-4">
+  <h3 class="mb-0 h4 col-md-5 d-flex justify-content-start" style="font-style:italic">Tal2text Dashboard</h3>
+<div style="float:right" class="col-md-6 d-flex justify-content-end">
+ <button type="button" class="btn btn-primary  shadow" data-toggle="modal"  data-target="#uploadModal">Upload Audios</button> 
+  <button type="button" class="btn btn-warning  shadow" style="margin-left:10px" id="transcribeAllBtn">Transcribe AI</button>
+  <button type="button" class="btn btn-success shadow" style="margin-left:10px" data-toggle="modal" data-target="#exportModal">Export</button>
+</div>
+</nav>
+
+
+<div class="container">
+  <div class="row d-flex justify-content-center mt-5">
+    <div class="col-md-5">
+
+          <div class="card pt-4 pb-2">
+        <div class="card-header ">
+          <div class="card-title d-flex flex-column">
+            <div class="row d-flex justify-content-center">
+              <span class="h4 text-center" style="font-weight:bolder; line-height:0.2">  {{transcriber.username}}
+              </span>
+
+            </div>
+                                              <div class="row d-flex justify-content-center" style="text-align:center">  
+              {% if is_online %}
+        <span style="color: #198754;font-size:12px">~online~</span>
+        {% else %}
+        <span style="color: #dc3545;font-size:12px">~offline~</span>
+        {% endif %}
+                                  </div>
+          </div>
+        </div>
+        <div class="card-body pt-2 pb-2 d-flex flex-wrap justify-content-center">
+          <div class="d-flex flex-column content-justify-center flex-row-fluid" style="Width:100%;text-align:center">
+
+        <div class="d-flex fw-semibold justify-content-center">
+            <table class="table">
+  <thead>
+    <tr>
+      <th scope="col"></th>
+      <th scope="col">Done</th>
+      <th scope="col">Left</th>
+      <th scope="col">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">Transcription</th>
+      <td>{{done_duration_formatted}}</td>
+      <td>{{left_duration_formatted}} </td>
+      <td>{{total_duration_formatted}}</td>
+    </tr>
+    <tr>
+      <th scope="row">Review</th>
+      <td>{{review_done_duration_formatted}}</td>
+      <td>{{review_left_duration_formatted}}</td>
+      <td>{{review_total_duration_formatted}}</td>
+    </tr>
+
+  </tbody>
+</table>
+            </div>
+                        <div class="d-flex fw-semibold justify-content-center mt-3">
+              {% if percentage >= 50 %}
+  <div class="text-success">
+    <i class="fas fa-check-circle"></i> Performance: {{ percentage |floatformat:2 }}%
+  </div>
+{% else %}
+  <div class="text-danger">
+    <i class="fas fa-times-circle"></i> Performance: {{ percentage |floatformat:2 }}%
+  </div>
+{% endif %}
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <div class="row d-flex justify-content-center mt-5">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-body">
+          <table class="table table-hover">
+            <thead>
+         
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Audio File</th>
+                <th scope="col">Transcription </th>
+                <th scope="col">Review Status </th>
+                  <th scope="col">Reviewed By </th>
+              </tr>
+            </thead>
+            <tbody> {% for audio in transription_audio_files %} 
+                   {% if not audio.transcription.review_status or audio.transcription.review_status == "unreviewed" %}
+              <tr>
+                {% elif  audio.transcription.review_status == "GOOD" %}
+<tr class="table-success">
+  {% elif  audio.transcription.review_status == "BAD" %}
+<tr class="table-danger">
+  {% endif %}
+                <td>{{ audio.id }}</td>
+                <td>
+  
+             <audio controls id="player-{{ audio.id }}" class='d-flex justify-content-center align-items-center'>
+                <source src="{{ audio.audio_file.url }}" type="audio/mp3"> Your browser does not support the audio element.
+              </audio>
+      </td>
+                </td>
+                 
+                <td>{{ audio.transcription.text}} </td>
+                <td>
+                
+                             {% if audio.transcription.review_status == "GOOD" %} 
+              <i class="fas fa-thumbs-up transcript-status active green-icon"></i>
+{% elif audio.transcription.review_status == "BAD" %}
+              <i class="fas fa-thumbs-down transcript-status active red-icon" style="color:#dc3545 !important"></i> 
+              {% else %} -
+{% endif %}
+                </td>
+                <td> {{ audio.to_be_reviewed_by.username}} </td>
+              </tr> {% endfor %} 
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+        <div class="d-flex justify-content-center mt-3">
+
+        <nav aria-label="Page navigation example">
+          <ul class="pagination"> {% if transription_audio_files.has_previous %} <li class="page-item">
+              <a class="page-link" href="?page={{ transription_audio_files.previous_page_number }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li> {% endif %} {% for page_num in transription_audio_files.paginator.page_range %} {% if transription_audio_files.number == page_num %} <li class="page-item active">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num == transription_audio_files.paginator.page_range.start %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num == transription_audio_files.paginator.page_range.stop %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num > transription_audio_files.number|add:'-2' and page_num < transription_audio_files.number|add:'5' %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% endif %} {% endfor %} {% if transription_audio_files.has_next %} <li class="page-item">
+              <a class="page-link" href="?page={{ transription_audio_files.next_page_number }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li> {% endif %} </ul>
+        </nav>
+  </div>
+
+
+    <div class="row d-flex justify-content-center mt-5">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-body">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Audio File</th>
+                <th scope="col">Transcription </th>
+                <th scope="col">Review Status </th>
+              </tr>
+            </thead>
+            <tbody> {% for audio in review_audio_files %} <tr>
+                <td>{{ audio.id }}</td>
+                <td>
+  
+             <audio controls id="player-{{ audio.id }}" class='d-flex justify-content-center align-items-center'>
+                <source src="{{ audio.audio_file.url }}" type="audio/mp3"> Your browser does not support the audio element.
+              </audio>
+      </td>
+                </td>
+                 
+                <td>{{ audio.transcription.text}} </td>
+                <td>
+                
+                             {% if audio.transcription.review_status == "GOOD" %} 
+              <i class="fas fa-thumbs-up transcript-status active green-icon"></i>
+{% elif audio.transcription.review_status == "BAD" %}
+              <i class="fas fa-thumbs-down transcript-status active red-icon" style="color:#dc3545 !important"></i> 
+              {% else %} -
+{% endif %}
+                </td>
+              </tr> {% endfor %} 
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+        <div class="d-flex justify-content-center mt-3">
+
+        {% comment %} <nav aria-label="Page navigation example">
+          <ul class="pagination"> {% if transription_audio_files.has_previous %} <li class="page-item">
+              <a class="page-link" href="?page={{ transription_audio_files.previous_page_number }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li> {% endif %} {% for page_num in transription_audio_files.paginator.page_range %} {% if transription_audio_files.number == page_num %} <li class="page-item active">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num == transription_audio_files.paginator.page_range.start %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num == transription_audio_files.paginator.page_range.stop %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num > transription_audio_files.number|add:'-2' and page_num < transription_audio_files.number|add:'5' %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% endif %} {% endfor %} {% if transription_audio_files.has_next %} <li class="page-item">
+              <a class="page-link" href="?page={{ transription_audio_files.next_page_number }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li> {% endif %} </ul>
+        </nav> {% endcomment %}
+  </div>
+  </div>
+
+</div>
+
+
+{% endblock content %}

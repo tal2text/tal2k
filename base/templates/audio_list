@@ -1,0 +1,1018 @@
+<!DOCTYPE html> {% load static %} <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha384-KyZXEAg3QhqLMpG8r+HzFEx3g0DpTJv7aA8CqVgCJoDZJ+IbbVYUew+OrCXaRkfj" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" integrity="sha512-W/zrbCncQnky/EzL+/AYwTtosvrM+YG/V6piQLSe2HuKS6cmbw89kjYkp3tWFn1dkWV7L1ruvJyKbLz73Vlgfg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" integrity="sha512-siarrzI1u3pCqFG2LEzi87McrBmq6Tp7juVsdmGY1Dr8Saw+ZBAzDzrGwX3vgxX1NkioYNCFOVC0GpDPss10zQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" integrity="sha512-P9pgMgcSNlLb4Z2WAB2sH5KBKGnBfyJnq+bhcfLCFusrRc4XdXrhfDluBl/usq75NF5gTDIMcwI1GaG5gju+Mw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Tal2text</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <style>
+      .myplayerbutton {
+        background-color: transparent !important;
+        border: none !important;
+        font-size: 25px;
+      }
+
+      .icon-hidden {
+        display: none !important;
+      }
+
+      .edit-icon {
+        cursor: pointer;
+        color: #3498db;
+        margin-left: 10px;
+      }
+
+      .transcription-edit-container {
+        display: none;
+        margin-top: 10px;
+      }
+
+      .transcript-status {
+        cursor: pointer;
+        color: #ccc;
+        /* Default color for inactive icons */
+      }
+
+      .transcript-status.active {
+        color: green;
+        /* Change to green when active */
+      }
+
+      #custom-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #progressBarContainer {
+        width: 100%;
+        height: 10px;
+        background-color: #ccc;
+        margin-top: 10px;
+        cursor: pointer;
+      }
+
+      #progressBar {
+        height: 100%;
+        width: 0;
+        background-color: #3498db;
+      }
+
+      .repetition-button {
+        border: 1px solid #ccc;
+        background-color: #fff;
+        padding: 5px 10px;
+        margin-right: 5px;
+        cursor: pointer;
+      }
+
+      .repetition-button.active {
+        background-color: #007bff;
+        color: #fff;
+        border-color: #007bff;
+      }
+
+            .speed-button {
+        border: 1px solid #ccc;
+        background-color: #fff;
+        padding: 5px 10px;
+        margin-right: 5px;
+        cursor: pointer;
+      }
+
+      .status-button.active {
+        background-color: #007bff;
+        color: #fff;
+        border-color: #007bff;
+      }
+
+      .status-button {
+        border: 1px solid #ccc;
+        background-color: #fff;
+        padding: 5px 10px;
+        margin-right: 5px;
+        width:9%;
+        cursor: pointer;
+      }
+
+      .speed-button.active {
+        background-color: #007bff;
+        color: #fff;
+        border-color: #007bff;
+      }
+
+      .audio-player {
+        text-align: center;
+      }
+
+      .audio-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      .audio-list li {
+        cursor: pointer;
+        margin: 5px;
+      }
+
+      /* Define the style for the currently playing audio */
+      .playing {
+        background-color: #f5f5f5;
+        /* Change this to the desired highlight color */
+        color: #333;
+        /* Change this to the desired text color */
+        font-weight: bold;
+      }
+
+      /* Additional styling for the audio list items */
+      .audio-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .audio-list li {
+        padding: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      .audio-list li:hover {
+        background-color: #f5f5f5;
+        color: #333;
+      }
+
+      .highlited {
+        background-color: yellow;
+      }
+
+      td {
+        height: 80px !important;
+      }
+
+      /* This style applies to the textarea when it's in edit mode */
+      .edit-mode {
+        border: 2px solid blue;
+        /* Change the border color */
+        background-color: #f0f0f0;
+        /* Change the background color */
+        /* Add any other styling you want */
+      }
+
+      /* Add this to your stylesheet */
+      #progress-bar {
+        width: 0%;
+        cursor: pointer;
+      }
+      .active.green-icon {
+      color: green;
+    }
+
+      .active.red-icon {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- As a heading -->
+    <nav class="navbar navbar-light bg-light d-flex justify-content-center p-4">
+      <h3 class="navbar-brand mb-0 h1 ">~ Tal2text ~ {{editlog.num_edits}}</h3>
+    </nav>
+    <div class="d-flex justify-content-center">
+
+      <button type="button" class="btn btn-primary mt-4" data-toggle="modal" style="width:10%;" data-target="#uploadModal">Upload Audio</button>
+      <button type="button" class="btn btn-warning mt-4" style="margin-left:10px;width:10%" id="transcribeAllBtn">Transcribe AI</button>
+      <button type="button" class="btn btn-success mt-4" style="margin-left:10px;width:10%" data-toggle="modal" data-target="#exportModal">Export</button>
+      <button type="button" class="btn btn-secondary mt-4" style="margin-left:10px;width:10%" data-toggle="modal" data-target="#protocolModal">Protocol</button>
+    </div>
+  
+    <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="uploadModalLabel">Upload Audio</h5>
+            <button type="button" class="close myplayerbutton" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'upload_multiple_audio' %}"> {% csrf_token %} <input type="file" class="form-control-file" name="audio_files" multiple accept="audio/*" id="hiddenFileInput">
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" onclick="document.getElementById('uploadForm').submit()">Upload All</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exportModalLabel">Export Transcription</h5>
+            <button type="button" class="close myplayerbutton" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <a href="{% url 'export_transcriptions' %}" class="btn btn-success" download>Export Transcriptions as ZIP</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="protocolModal" tabindex="-1" role="dialog" aria-labelledby="protocolModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="protocolModalModalLabel">Protocol</h5>
+            <button type="button" class="close myplayerbutton" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <h3> Words </h3>
+            <p>
+            <ul>
+              <li> If there are a sequence of words that are incomprehensible, transcribe them as <span style="color:red;background-color:lightgrey"> &lt;unclear&gt; </span>
+              </li>
+              <li>The only allowed characters are all English alphabets <span style="color:red;background-color:lightgrey">(A-Z and a-z) </span>, fullstops (- ), question marks 2, commas , , apostrophes, left angular brace &lt;, and right angular brace &gt; </li>
+              <li>The left and right angular braces are only for special words such as: &lt;unclear&gt;, &lt;hmm&gt;, &lt;ah&gt;</li>
+            </ul>
+            </p>
+            <h3> Disfluencies </h3>
+            <p>
+            <ul>
+              <li>Filler words, such as: &lt;hmm&gt; needs to be transcribed and put between the angular braces </li>
+              <li>If a person starts uttering a word but does not finish it, we call them false starts. For example, if a person meant to say the word: feedback and cut it short and uttered only fee , then transcribe that as &lt;fee...&gt; </li>
+              <li>If a person is stuttering or repeating words, transcribe them as well. For example, if someone is stuttering as saying I I I want to thank you, then transcribe all the I's and add a dash right after teh preceding I's. In this case, teh transcription will look like: I- I- I want to thank you.</li>
+            </ul>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+      <div class="modal fade" id="replaceModal" tabindex="-1" role="dialog" aria-labelledby="replaceModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="replaceModalLabel">Find & Replace</h5>
+            <button type="button" class="close myplayerbutton" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+    <div>
+    <input type="text" id="findInput" class="form-control" style="width:100%" placeholder="Find">
+    <input type="text" id="replaceInput" class="form-control mt-2" placeholder="Replace">
+    <div class="d-flex justify-content-center">
+    <button id="findReplaceButton" class="btn btn-primary mt-2">Find & Replace</button>
+    </div>
+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+    <div class="d-flex justify-content-center mt-4">
+  <button class="status-button {% if selected_status == 'All' or not selected_status %}active{% endif %}" name="status" value="All">All</button>
+  <button class="status-button {% if selected_status == 'GOOD' %}active{% endif %}" name="status" value="GOOD">Good</button>
+  <button class="status-button {% if selected_status == 'BAD' %}active{% endif %}" name="status" value="BAD">Bad</button>
+  <button class="status-button {% if selected_status == 'unverified' %}active{% endif %}" name="status" value="unverified">Unverified</button>
+    </div>
+
+
+    <div class="container table-responsive py-4">
+      <table class="table table-bordered table-hover" style="width: auto !important">
+        <thead>
+          <th scope="row">#</th>
+          <th scope="row"></th>
+          <th scope="row" style="width:900px !important;">Transcription</th>
+          {% comment %} <th scope="row">Status</th> {% endcomment %}
+        </thead>
+        <tbody> {% for audio in audio_files %} <tr class="audio-row">
+            <th scope="row">{{ audio.id }}</th>
+            <td>
+              <audio controls id="player-{{ audio.id }}" class='d-flex justify-content-center align-items-center'>
+                <source src="{{ audio.audio_file.url }}" type="audio/mp3"> Your browser does not support the audio element.
+              </audio>
+            </td>
+            <td style="padding:0px !important;">
+              <div class="transcription-container">
+                <textarea class="transcription-text form-control myTextarea" style="border:none !important; height:80px;    overflow: hidden; /* Hide any overflow content */
+                resize: none; /* Disable textarea resizing */; border-radius:0px !important; background-color:inherit !important" data-audio-id="{{ audio.id }}" style="width:100%; height:auto !important">{{ audio.transcription.text }}</textarea>
+                <span class="edit-icon" style="display: none;">
+                  <i class="fas fa-edit"></i>
+                </span>
+              </div>
+            </td>
+            {% comment %} <td style="text-align:center"> 
+           {% if audio.transcription %} 
+         {% if audio.transcription.status == "GOOD" %} 
+              <i class="fas fa-thumbs-up transcript-status active green-icon" data-status="GOOD"></i>
+              <i class="fas fa-thumbs-down transcript-status" data-status="BAD"></i> 
+             {% elif audio.transcription.status == "BAD" %} 
+              <i class="fas fa-thumbs-up transcript-status" data-status="GOOD"></i>
+              <i class="fas fa-thumbs-down transcript-status active red-icon" data-status="BAD"></i> 
+              {% else %} 
+              <i class="fas fa-thumbs-up transcript-status" data-status="GOOD"></i>
+              <i class="fas fa-thumbs-down transcript-status" data-status="BAD"></i> {% endif %} 
+               {% endif %} 
+            </td> {% endcomment %}
+          </tr> {% endfor %} 
+        </tbody>
+      </table>
+      <div class="d-flex justify-content-center" style="position:relative !important; z-index:2;margin-bottom:50px;">
+        <nav aria-label="Page navigation example">
+          <ul class="pagination"> {% if audio_files.has_previous %} <li class="page-item">
+              <a class="page-link" href="?page={{ audio_files.previous_page_number }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li> {% endif %} {% for page_num in audio_files.paginator.page_range %} {% if audio_files.number == page_num %} <li class="page-item active">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num == audio_files.paginator.page_range.start %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num == audio_files.paginator.page_range.stop %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num > audio_files.number|add:'-2' and page_num < audio_files.number|add:'5' %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% endif %} {% endfor %} {% if audio_files.has_next %} <li class="page-item">
+              <a class="page-link" href="?page={{ audio_files.next_page_number }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li> {% endif %} </ul>
+        </nav>
+      </div>
+      <footer class="footer navbar-light bg-light d-flex justify-content-center fixed-bottom" style="height:auto;">
+        <div class="audio-player" class="d-flex justify-content-center" style="width:100%">
+          <div id="progress-bar-container" style="     --tw-bg-opacity: 1;   background-color: rgb(227 232 239/var(--tw-bg-opacity));">
+            <div id="progress-bar" style="background-color:#0d6efd;height:5px;cursor:pointer"></div>
+          </div>
+          <nav class="audio-navigation" style="    display: block;
+          width: 100%;
+          padding: 15px;">
+            <audio id="audio-element" style="display:none" controls> Your browser does not support the audio element. </audio> {% comment %} <button id="prev-button">&larr; Previous</button> {% endcomment %} <button id="prev-button" style="" class="myplayerbutton">
+              <i class="fas fa-angle-left"></i>
+            </button>
+            <button id="play-button" class="myplayerbutton">
+              <i class="fa fa-play"></i>
+            </button>
+            <button id="pause-button" class="myplayerbutton">
+              <i class="fa fa-pause"></i>
+            </button>
+            <button id="next-button" class="myplayerbutton" style="">
+              <i class="fas fa-angle-right"></i>
+            </button>
+            <div style="float:left; width:auto;" class="d-flex">
+              {% comment %} <label for="repetition" style="margin-right: 10px;">Repetition:</label>
+              <button class="repetition-button {% if selected_repetition == '1' %}active{% endif %}" name="repetition" value="1">1x</button>
+              <button class="repetition-button {% if selected_repetition == '2' %}active{% endif %}" name="repetition" value="2">2x</button>
+              <button class="repetition-button {% if selected_repetition == '3' %}active{% endif %}" name="repetition" value="3">3x</button>
+            {% endcomment %}
+                        <button type="button" class="btn btn-primary" data-toggle="modal"  data-target="#replaceModal">Find & Replace</button>
+
+            </div>
+           
+            <div style="float:right">
+              <label for="speed" style="margin-right: 10px;">Speed:</label>
+              <button class="speed-button {% if selected_speed == '0.5' %}active{% endif %}" name="speed" value="0.5">x0.5</button>
+              <button class="speed-button {% if selected_speed == '0.75' %}active{% endif %}" name="speed" value="0.75">x0.75</button>
+              <button class="speed-button {% if selected_speed == '1' %}active{% endif %}" name="speed" value="1">x1</button>
+            </div>
+          </nav>
+          <ul class="audio-list" style="display:none"> {% for audio in audio_files %} <li data-src="{{ audio.audio_file.url }}">Audio {{forloop.counter}}</li> {% endfor %}
+            <!-- Add more audio files as needed -->
+          </ul>
+        </div>
+      </footer>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+      <script>
+        function getCSRFToken() {
+          const csrfCookie = document.cookie.match(/(^|;) ?csrftoken=([^;]*)(;|$)/);
+          return csrfCookie ? csrfCookie[2] : '';
+        }
+      </script>
+<script>
+  const statusButtons = document.querySelectorAll('.status-button');
+
+  statusButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const selectedStatus = this.value;
+
+      if (selectedStatus === "All") {
+        const url = new URL("{% url 'audio_list' %}", window.location.href);
+        url.searchParams.delete('status');
+        window.location.href = url.toString();
+      } else {
+        const url = new URL("{% url 'audio_list' %}", window.location.href);
+        url.searchParams.set('status', selectedStatus);
+        window.location.href = url.toString();
+      }
+    });
+  });
+</script>
+
+{% comment %} old one for update {% endcomment %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const transcriptionContainers = document.querySelectorAll('.transcription-container');
+    transcriptionContainers.forEach((container, index) => {
+      const transcriptionText = container.querySelector('.transcription-text');
+      const audioId = transcriptionText.getAttribute('data-audio-id');
+      const originalTranscription = transcriptionText.value;
+
+      transcriptionText.addEventListener('click', () => {
+        if (!transcriptionText.classList.contains('edit-mode')) {
+          transcriptionText.classList.add('edit-mode');
+        }
+      });
+
+      transcriptionText.addEventListener('input', () => {
+        if (transcriptionText.classList.contains('edit-mode')) {
+          const newTranscription = transcriptionText.value;
+          // Update the display and exit edit mode
+          updateTranscriptionAndExitEditMode(transcriptionText, audioId, newTranscription);
+        }
+      });
+    });
+
+    // Find and Replace Functionality
+    const findReplaceButton = document.getElementById('findReplaceButton');
+    const findInput = document.getElementById('findInput');
+    const replaceInput = document.getElementById('replaceInput');
+
+    findReplaceButton.addEventListener('click', () => {
+      const findText = findInput.value;
+      const replaceText = replaceInput.value;
+
+      transcriptionContainers.forEach((container) => {
+        const transcriptionText = container.querySelector('.transcription-text');
+        const audioId = transcriptionText.getAttribute('data-audio-id'); // Get audioId within this loop
+        const currentText = transcriptionText.value;
+        const newText = currentText.replace(new RegExp(findText, 'g'), replaceText);
+        transcriptionText.value = newText;
+
+        // Update the transcription and save it
+        updateTranscriptionAndExitEditMode(transcriptionText, audioId, newText);
+      });
+    });
+  });
+
+  function updateTranscriptionAndExitEditMode(transcriptionText, audioId, newTranscription) {
+    fetch(`/update_transcription/${audioId}/`, {
+      method: 'POST', // Change to the appropriate HTTP method
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': getCSRFToken() // Replace with how you retrieve CSRF token
+      },
+      body: `newTranscription=${encodeURIComponent(newTranscription)}`
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update the display and exit edit mode
+          transcriptionText.classList.remove('edit-mode');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+</script>
+
+{% comment %} <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const transcriptStatusIcons = document.querySelectorAll('.transcript-status');
+    transcriptStatusIcons.forEach(icon => {
+      icon.addEventListener('click', () => {
+        const audioId = icon.closest('tr').querySelector('.transcription-text').getAttribute('data-audio-id');
+        const status = icon.getAttribute('data-status');
+        fetch(`/update_status/${audioId}/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCSRFToken()
+          },
+          body: `status=${encodeURIComponent(status)}`
+        }).then(response => {
+          if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+          }
+          return response.json();
+        }).then(data => {
+          if (data.success) {
+            // Deactivate all icons in the same row
+            
+            const rowIcons = Array.from(icon.closest('tr').querySelectorAll('.transcript-status'));
+            console.log(rowIcons);
+            rowIcons.forEach(rowIcon => rowIcon.classList.remove('active'));
+            // Activate the clicked icon
+            icon.classList.add('active');
+          }
+        }).catch(error => {
+          console.error('Error:', error);
+        });
+      });
+    });
+  });
+</script> {% endcomment %}
+
+      {% comment %} <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const repetitionButtons = document.querySelectorAll('.repetition-button');
+          const playButton = document.getElementById('playButton');
+          const stopButton = document.getElementById('stopButton');
+          const audioElements = document.querySelectorAll('audio');
+          let currentIndex = 0;
+          let remainingRepetitions = 0;
+          let isPlaying = false;
+          let repetitionFactor = 1; // Initialize repetitionFactor
+          repetitionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+              repetitionFactor = parseInt(button.value); // Update repetitionFactor
+              // Set the active button style
+              repetitionButtons.forEach(btn => btn.classList.remove('active'));
+              button.classList.add('active');
+              // Update repetition factor and reset playback
+              currentIndex = 0;
+              remainingRepetitions = repetitionFactor;
+              isPlaying = false;
+            });
+          });
+          playButton.addEventListener('click', () => {
+            if (!isPlaying) {
+              isPlaying = true;
+              if (remainingRepetitions === 0) {
+                currentIndex = 0;
+                remainingRepetitions = repetitionFactor;
+                playAudio(currentIndex);
+              } else {
+                playAudio(currentIndex);
+              }
+            }
+          });
+          stopButton.addEventListener('click', () => {
+            isPlaying = false;
+            audioElements[currentIndex].pause();
+            audioElements[currentIndex].currentTime = 0;
+            remainingRepetitions = 0;
+          });
+
+          function playAudio(index) {
+            if (index >= audioElements.length || !isPlaying) {
+              currentIndex = 0;
+              remainingRepetitions = 0;
+              isPlaying = false;
+              return;
+            }
+            const audio = audioElements[index];
+            audio.pause();
+            audio.currentTime = 0;
+            audio.addEventListener('ended', () => {
+              remainingRepetitions--;
+              if (remainingRepetitions > 0) {
+                audio.currentTime = 0;
+                audio.play();
+              } else {
+                currentIndex++;
+                remainingRepetitions = 0;
+                playAudio(currentIndex);
+              }
+            });
+            audio.play();
+          }
+        });
+      </script> the real one {% endcomment %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const audioList = document.querySelectorAll('.audio-list li');
+    const audioElement = document.getElementById('audio-element');
+    const prevButton = document.getElementById('prev-button');
+    const nextButton = document.getElementById('next-button');
+    const playButton = document.getElementById('play-button');
+    const pauseButton = document.getElementById('pause-button');
+    const progressBar = document.getElementById('progress-bar');
+    const repetitionButtons = document.querySelectorAll('.repetition-button');
+    const speedButtons = document.querySelectorAll('.speed-button');
+    const audioRows = document.querySelectorAll('.audio-row');
+    const textareas = document.querySelectorAll('.myTextarea');
+
+    let currentIndex = 0;
+    let isPlaying = false;
+    let playbackPosition = 0;
+    let repetitionFactor = 1;
+    let remainingRepetitions = repetitionFactor;
+    let audioFocused = false;
+    let audioLooping = false;
+    let playbackRate = 1.0; // Initialize playback rate
+
+    audioRows.forEach((row, index) => {
+      row.addEventListener('click', () => {
+        audioFocused = false;
+        switchRow(index);
+      });
+    });
+
+    textareas.forEach((textarea, index) => {
+      textarea.addEventListener('focus', () => {
+        audioFocused = false;
+        switchRow(index);
+        if (audioLooping) {
+          playAudio(currentIndex);
+        }
+      });
+
+      textarea.addEventListener('blur', () => {
+        if (!audioFocused) {
+          pauseAudio();
+        }
+      });
+
+      textarea.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          focusNextTextarea(index);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          focusPreviousTextarea(index);
+        } else if (event.shiftKey && event.key === 'Q') {
+          event.preventDefault();
+          insertTextAtCursor(textarea, '<UNCLEAR>');
+        } else if (event.shiftKey && event.key === 'Z') {
+          event.preventDefault();
+          insertTextAtCursor(textarea, '<ah>');
+        } else if (event.key === ' ') {
+          event.preventDefault();
+          insertTextAtCursor(textarea, ' ');
+        } else if (event.key === 'Control') {
+          event.preventDefault();
+          wrapSelectedTextInAngleBrackets(textarea);
+        } else if (event.shiftKey && event.code === 'Digit1') {
+          event.preventDefault();
+          replaceSelectedNumbersWithWords(textarea);
+        }
+      });
+    });
+
+    function wrapSelectedTextInAngleBrackets(textarea) {
+      const selectionStart = textarea.selectionStart;
+      const selectionEnd = textarea.selectionEnd;
+      const text = textarea.value;
+      const selectedText = text.substring(selectionStart, selectionEnd);
+      const newText = text.substring(0, selectionStart) + '<' + selectedText + '>' + text.substring(selectionEnd);
+      textarea.value = newText;
+    }
+
+    function replaceSelectedNumbersWithWords(textarea) {
+      const currentValue = textarea.value;
+      const selectionStart = textarea.selectionStart;
+      const selectionEnd = textarea.selectionEnd;
+
+      function replaceDigitWithWord(digit) {
+        const numberToWordMap = {
+          '1': 'one ',
+          '2': 'two ',
+          '3': 'three ',
+          '4': 'four ',
+          '5': 'five ',
+          '6': 'six ',
+          '7': 'seven ',
+          '8': 'eight ',
+          '9': 'nine ',
+          '0': 'zero ',
+        };
+        return numberToWordMap[digit] || digit;
+      }
+
+      const updatedText = currentValue
+        .substring(selectionStart, selectionEnd)
+        .split('')
+        .map(replaceDigitWithWord)
+        .join('');
+
+      const newText =
+        currentValue.substring(0, selectionStart) +
+        updatedText +
+        currentValue.substring(selectionEnd);
+
+      textarea.value = newText;
+      textarea.setSelectionRange(
+        selectionStart,
+        selectionStart + updatedText.length
+      );
+    }
+
+    audioElement.addEventListener('ended', () => {
+      if (!audioFocused) {
+        playAudio(currentIndex);
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.shiftKey && event.code === 'Space') {
+        event.preventDefault();
+        togglePlayPause();
+      }
+    });
+
+    function playAudio(index) {
+      if (isPlaying) {
+        pauseAudio();
+      }
+
+      currentIndex = index;
+      audioRows.forEach((row, i) => {
+        row.classList.toggle('playing', i === index);
+      });
+
+      audioElement.src = audioList[index].getAttribute('data-src');
+      playbackPosition = 0;
+      audioElement.currentTime = playbackPosition;
+      audioElement.playbackRate = playbackRate; // Set the playback rate
+      audioElement.play();
+
+      audioList.forEach((item, i) => {
+        item.classList.toggle('playing', i === index);
+      });
+
+      isPlaying = true;
+      playButton.style.display = 'none';
+      pauseButton.style.display = 'inline';
+    }
+
+    function pauseAudio() {
+      if (isPlaying) {
+        audioElement.pause();
+        isPlaying = false;
+        playButton.style.display = 'inline';
+        pauseButton.style.display = 'none';
+        playbackPosition = audioElement.currentTime;
+      }
+    }
+
+    function updateProgressBar() {
+      const currentTime = audioElement.currentTime;
+      const duration = audioElement.duration;
+      const progressPercentage = (currentTime / duration) * 100;
+      progressBar.style.width = `${progressPercentage}%`;
+    }
+
+    audioElement.addEventListener('ended', () => {
+      if (!audioFocused) {
+        playAudio(currentIndex);
+      }
+    });
+
+    // Update the event listener for timeupdate
+    audioElement.addEventListener('timeupdate', updateProgressBar);
+
+    function playNext() {
+      if (remainingRepetitions > 1) {
+        remainingRepetitions--;
+        playAudio(currentIndex);
+      } else {
+        currentIndex = (currentIndex + 1) % audioList.length;
+        remainingRepetitions = repetitionFactor;
+        playAudio(currentIndex);
+      }
+    }
+
+    function playPrevious() {
+      currentIndex = (currentIndex - 1 + audioList.length) % audioList.length;
+      playAudio(currentIndex);
+    }
+
+    function togglePlayPause() {
+      if (isPlaying) {
+        pauseAudio();
+      } else {
+        playAudio(currentIndex);
+      }
+    }
+
+    function switchRow(newIndex) {
+      if (currentIndex !== newIndex) {
+        if (isPlaying) {
+          pauseAudio();
+        }
+        currentIndex = newIndex;
+        playAudio(currentIndex);
+        audioLooping = true;
+      }
+    }
+
+    function focusNextTextarea(currentIndex) {
+      audioFocused = true;
+      currentIndex = (currentIndex + 1) % textareas.length;
+      textareas[currentIndex].focus();
+    }
+
+    function focusPreviousTextarea(currentIndex) {
+      audioFocused = true;
+      currentIndex = (currentIndex - 1 + textareas.length) % textareas.length;
+      textareas[currentIndex].focus();
+    }
+
+    function insertTextAtCursor(textarea, textToInsert) {
+      const currentPosition = textarea.selectionStart;
+      const text = textarea.value;
+      const newText = text.substring(0, currentPosition) + textToInsert + text.substring(currentPosition);
+      textarea.value = newText;
+      const newCursorPosition = currentPosition + textToInsert.length;
+      textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+    }
+
+    nextButton.addEventListener('click', playNext);
+    prevButton.addEventListener('click', playPrevious);
+
+    repetitionButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        repetitionFactor = parseInt(button.value);
+        repetitionButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        remainingRepetitions = repetitionFactor;
+      });
+    });
+
+    speedButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const newSpeed = parseFloat(button.value);
+        speedButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        audioElement.playbackRate = newSpeed;
+        playbackRate = newSpeed; // Store the playback rate
+
+        // Check if audio is playing, and if so, apply the new speed immediately
+        if (isPlaying) {
+          audioElement.playbackRate = newSpeed;
+        }
+      });
+    });
+
+    playButton.addEventListener('click', () => {
+      playAudio(currentIndex);
+    });
+
+    pauseButton.addEventListener('click', () => {
+      pauseAudio();
+    });
+
+    playAudio(currentIndex);
+    playButton.style.display = 'inline';
+    pauseButton.style.display = 'none';
+  });
+</script>
+
+      {% comment %} <script>
+        const textareas = document.querySelectorAll('.myTextarea');
+        textareas.forEach(textarea => {
+          textarea.addEventListener('keydown', (event) => {
+            // Check if the user presses Shift + Q
+            if (event.shiftKey && event.key === 'Q') {
+              event.preventDefault(); // Prevent the default behavior (e.g., typing "Q" in the textarea)
+              // Insert < unclear > at the current cursor position
+              const currentPosition = textarea.selectionStart;
+              const text = textarea.value;
+              const newText = text.substring(0, currentPosition) + ' < UNCLEAR > ' + text.substring(currentPosition);
+              textarea.value = newText;
+              // Move the cursor to the end of the inserted text
+              const newCursorPosition = currentPosition + ' < UNCLEAR > '.length;
+              textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+            }
+            if (event.shiftKey && event.key === 'Z') {
+              event.preventDefault(); // Prevent the default behavior (e.g., typing "Q" in the textarea)
+              // Insert < unclear > at the current cursor position
+              const currentPosition = textarea.selectionStart;
+              const text = textarea.value;
+              const newText = text.substring(0, currentPosition) + ' < ah > ' + text.substring(currentPosition);
+              textarea.value = newText;
+              // Move the cursor to the end of the inserted text
+              const newCursorPosition = currentPosition + ' < ah > '.length;
+              textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+            }
+      if (event.key === ' ') {
+        event.preventDefault();
+        const currentPosition = textarea.selectionStart;
+        const text = textarea.value;
+        const newText = text.substring(0, currentPosition) + ' ' + text.substring(currentPosition);
+        textarea.value = newText;
+        // Move the cursor to the end of the inserted text
+        const newCursorPosition = currentPosition + 1;
+        textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+      }
+      if (event.key === 'Control') {
+        event.preventDefault(); // Prevent the default behavior of the Control key
+        const currentPosition = textarea.selectionStart;
+        const text = textarea.value;
+        const newText = text.substring(0, currentPosition) + '<>' + text.substring(currentPosition);
+        textarea.value = newText;
+        const newCursorPosition = currentPosition + 1; // Move cursor after '<>'
+        textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+      }
+    });
+  });
+
+      </script> {% endcomment %}
+
+      {% comment %} <script>
+    document.getElementById('findReplaceButton').addEventListener('click', function() {
+        const findText = document.getElementById('findInput').value;
+        const replaceText = document.getElementById('replaceInput').value;
+
+        // Get all text areas on the page
+        const textAreas = document.querySelectorAll('textarea');
+
+        textAreas.forEach(textArea => {
+            // Get the current text content of the text area
+            let currentText = textArea.value;
+
+            // Use a regular expression to find and replace all occurrences
+            const regex = new RegExp(findText, 'g');
+            currentText = currentText.replace(regex, replaceText);
+
+            // Update the text area with the replaced text
+            textArea.value = currentText;
+        });
+    });
+</script> {% endcomment %}
+
+{% comment %} old update  {% endcomment %}
+{% comment %} 
+ <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const transcriptionContainers = document.querySelectorAll('.transcription-container');
+          transcriptionContainers.forEach((container, index) => {
+            const transcriptionText = container.querySelector('.transcription-text');
+            const audioId = transcriptionText.getAttribute('data-audio-id');
+            const originalTranscription = transcriptionText.value;
+            transcriptionText.addEventListener('click', () => {
+              if (!transcriptionText.classList.contains('edit-mode')) {
+                transcriptionText.classList.add('edit-mode');
+              }
+            });
+            transcriptionText.addEventListener('blur', () => {
+              if (transcriptionText.classList.contains('edit-mode')) {
+                const newTranscription = transcriptionText.value;
+                fetch(`/update_transcription/${audioId}/`, {
+                  method: 'POST', // Change to the appropriate HTTP method
+                  headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCSRFToken() // Replace with how you retrieve CSRF token
+                  },
+                  body: `newTranscription=${encodeURIComponent(newTranscription)}`
+                }).then(response => response.json()).then(data => {
+                  if (data.success) {
+                    // Update the display and exit edit mode
+                    transcriptionText.value = newTranscription;
+                    transcriptionText.classList.remove('edit-mode');
+                  }
+                }).catch(error => {
+                  console.error('Error:', error);
+                });
+              }
+            });
+        /*    transcriptionText.addEventListener('keyup', event => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent the default behavior of Enter key
+                // Check if the current textarea is not empty or only whitespace
+                if (transcriptionText.value.trim() !== '') {
+                  // Focus on the next textarea, if available
+                  const nextContainer = transcriptionContainers[index + 1];
+                  if (nextContainer) {
+                    const nextTranscriptionText = nextContainer.querySelector('.transcription-text');
+                    nextTranscriptionText.focus();
+                  }
+                }
+              } else if (event.key === 'ArrowDown') {
+                // Focus on the next textarea, if available
+                const nextContainer = transcriptionContainers[index + 1];
+                if (nextContainer) {
+                  const nextTranscriptionText = nextContainer.querySelector('.transcription-text');
+                  nextTranscriptionText.focus();
+                }
+              } else if (event.key === 'ArrowUp') {
+                // Focus on the next textarea, if available
+                const nextContainer = transcriptionContainers[index - 1];
+                if (nextContainer) {
+                  const nextTranscriptionText = nextContainer.querySelector('.transcription-text');
+                  nextTranscriptionText.focus();
+                }
+              }
+            }); */
+          });
+        });
+      </script> {% endcomment %}
+  </body>
+
+</html>

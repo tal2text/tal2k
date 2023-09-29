@@ -1,0 +1,72 @@
+{% extends 'base/base.html' %}
+{% block content %}
+<style>
+  body {
+    background-color: #fcfcfc !important;
+  }
+</style>
+<nav class="navbar navbar-light bg-light d-flex justify-content-center p-4">
+  <h3 class="navbar-brand mb-0 h1" style="margin-right:0px !important;font-style:italic">Tal2text Dashboard</h3>
+</nav>
+<div class="container">
+  {% if type == "files" %}
+  <div class="row d-flex justify-content-center mt-5">
+    <div class="col-5">
+      <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'upload_multiple_audio' %}"> {% csrf_token %}
+        <input type="file" style="width:100%" class="form-control" name="audio_files" multiple accept="audio/*" id="hiddenFileInput">
+        <label class="mt-3" for="transcriber">Assign to Transcriber:</label>
+        <select name="transcriber" id="transcriber" class="form-control">
+          {% for user in transcribers %}
+          <option value="{{ user.id }}">{{ user.username }}</option>
+          {% endfor %}
+        </select>
+        <label class="mt-3" for="reviewer">Assign to Reviewer:</label>
+        <select name="reviewer" id="reviewer" class="form-control">
+          {% for user in reviewers %}
+          <option value="{{ user.id }}">{{ user.username }}</option>
+          {% endfor %}
+        </select>
+
+
+      </form>
+    </div>
+  </div>
+  <div class="row d-flex justify-content-center mt-2">
+    <button type="button" class="btn btn-success" style="width:100px;" onclick="document.getElementById('uploadForm').submit()">Upload All</button>
+  </div>
+  {% elif type == "folder" %}
+  <div class="row d-flex justify-content-center mt-5">
+        <div class="col-5">
+  <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'upload_multiple_audio' %}">
+  {% csrf_token %}
+  <input type="file" style="width:100%" class="form-control" name="audio_files" directory="" webkitdirectory="" multiple>
+  <!-- Other form fields and buttons as needed -->
+          <label class="mt-3" for="transcriber">Assign to Transcriber:</label>
+        <select name="transcriber" id="transcriber" class="form-control">
+          {% for user in transcribers %}
+          <option value="{{ user.id }}">{{ user.username }}</option>
+          {% endfor %}
+        </select>
+        <label class="mt-3" for="reviewer">Assign to Reviewer:</label>
+        <select name="reviewer" id="reviewer" class="form-control">
+          {% for user in reviewers %}
+          <option value="{{ user.id }}">{{ user.username }}</option>
+          {% endfor %}
+        </select>
+ 
+  {% comment %} <button type="submit" class="btn btn-primary">Upload All</button> {% endcomment %}
+    <div class="row d-flex justify-content-center mt-2">
+
+    <button type="button" class="btn btn-primary" style="width:100px;" onclick="document.getElementById('uploadForm').submit()">Upload</button>
+    </div>
+</form>
+</div>
+</div>
+{% endif %}
+</div>
+
+
+
+
+
+{% endblock content %}

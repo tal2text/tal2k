@@ -1,0 +1,322 @@
+{% extends 'base/base.html' %} {% block content %} <style>
+  body {
+    background-color: #fcfcfc !important;
+  }
+
+  .card {
+    --bs-card-spacer-y: 1rem;
+    --bs-card-spacer-x: 1rem;
+    --bs-card-title-spacer-y: 0.5rem;
+    --bs-card-border-width: 1px;
+    --bs-card-border-color: #F1F1F2;
+    --bs-card-border-radius: 0.625rem;
+    --bs-card-box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.03);
+    --bs-card-inner-border-radius: calc(0.625rem - 1px);
+    --bs-card-cap-padding-y: 0.5rem;
+    --bs-card-cap-padding-x: 1rem;
+    --bs-card-cap-bg: transparent;
+    --bs-card-bg: #ffffff;
+    --bs-card-img-overlay-padding: 1rem;
+    --bs-card-group-margin: 0.75rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    color: #071437;
+    word-wrap: break-word;
+    background-color: #ffffff;
+    background-clip: border-box;
+    border: 1px solid #F1F1F2;
+    border-radius: 0.625rem;
+    box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.03);
+  }
+
+  td {
+    height: auto !important;
+  }
+</style>
+<nav class="navbar navbar-light bg-light d-flex p-4">
+  <h3 class="mb-0 h4 col-md-5 d-flex justify-content-start" style="font-style:italic">Tal2text Dashboard</h3>
+<div style="float:right" class="col-md-6 d-flex justify-content-end">
+ <button type="button" class="btn btn-primary  shadow" data-toggle="modal"  data-target="#uploadModal">Upload Audios</button> 
+  <button type="button" class="btn btn-warning  shadow" style="margin-left:10px" id="transcribeAllBtn">Transcribe AI</button>
+  <button type="button" class="btn btn-success shadow" style="margin-left:10px" data-toggle="modal" data-target="#exportModal">Export</button>
+</div>
+</nav>
+
+<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        {% comment %} <h5 class="modal-title" id="uploadModalLabel">Upload Audio</h5> {% endcomment %}
+        <button type="button" class="close myplayerbutton" data-dismiss="modal" aria-label="Close" style="floayt:right">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-5 d-flex justify-content-center">
+ <a href="{% url 'upload_audios' %}"> <button type="button" class="btn btn-primary  shadow"  >Upload Audio Files</button>  </a>
+            </div> <div class="col-md-5  d-flex justify-content-center">
+ <a href="{% url 'upload_audio_folder' %}">  <button type="button" class="btn btn-warning  shadow" >Upload Audio Folder</button></a>
+ </div>      
+</div>
+      </div>
+      <div class="modal-footer">
+        {% comment %} <button type="button" class="btn btn-success" onclick="document.getElementById('uploadForm').submit()">Upload All</button> {% endcomment %}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exportModalLabel">Export Transcription</h5>
+        <button type="button" class="close myplayerbutton" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <a href="{% url 'export_transcriptions' %}" class="btn btn-success" download>Export Transcriptions as ZIP</a>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="row d-flex justify-content-center mt-5">
+    <div class="col-md-3">
+      <div class="card pt-3 pb-2">
+        <div class="card-header ">
+          <div class="card-title d-flex flex-column">
+            <div class="d-flex justify-content-center">
+              <span class="h1 text-center" style="color: #F1416C;font-size: 50px;font-weight:bolder">{{num_audios_tobetranscribed}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-2 pb-4 d-flex flex-wrap justify-content-center">
+          <div class="d-flex flex-column content-justify-center flex-row-fluid">
+            <div class="d-flex fw-semibold justify-content-center">
+              <div class="bullet w-8px h-3px rounded-2 bg-success me-3"></div>
+              <div class="text-gray-500 flex-grow-1 me-4">Audios left for transcription </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card pt-3 pb-2">
+        <div class="card-header">
+          <div class="card-title d-flex flex-column">
+            <div class="d-flex justify-content-center">
+              <span class="h1 text-center" style="color: #ffc107;font-size: 50px;font-weight:bolder">{{num_audios_tobereviewed}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-2 pb-4 d-flex flex-wrap justify-content-center">
+          <div class="d-flex flex-column content-justify-center flex-row-fluid">
+            <div class="d-flex fw-semibold justify-content-center">
+              <div class="bullet w-8px h-3px rounded-2 bg-success me-3"></div>
+              <div class="text-gray-500 flex-grow-1 me-4"> <i class="fas fa-hourglass-half"></i>Audios left for review </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card pt-3 pb-2">
+        <div class="card-header">
+          <div class="card-title d-flex flex-column">
+            <div class="d-flex justify-content-center">
+              <span class="h1 text-center" style="color: #0d6efd;font-size: 50px;font-weight:bolder">{{num_transcribers}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-2 pb-4 d-flex flex-wrap justify-content-center">
+          <div class="d-flex flex-column content-justify-center flex-row-fluid">
+            <div class="d-flex fw-semibold justify-content-center">
+              <div class="bullet w-8px h-3px rounded-2 bg-success me-3"></div>
+              <div class="text-gray-500 flex-grow-1 me-4"><i class="fa fa-users" aria-hidden="true"></i>
+Transcribers</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card pt-3 pb-2">
+        <div class="card-header">
+          <div class="card-title d-flex flex-column">
+            <div class="d-flex justify-content-center">
+              <span class="h1 text-center" style="color: #50cd89;font-size: 50px;font-weight:bolder">{{number_of_active_users}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-2 pb-4 d-flex flex-wrap justify-content-center">
+          <div class="d-flex flex-column content-justify-center flex-row-fluid">
+            <div class="d-flex fw-semibold justify-content-center">
+              <div class="bullet w-8px h-3px rounded-2 bg-success me-3"></div>
+              <div class="text-gray-500 flex-grow-1 me-4">Online Users </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row d-flex justify-content-center mt-5">
+    <div class="col-md-11">
+      <div class="card">
+        {% comment %} <div class="card-header pt-3">
+          <div class="card-title d-flex flex-column">
+            <span class="text-gray-400 pt-1 fw-semibold fs-6">Transcribers</span>
+          </div>
+        </div> {% endcomment %}
+        <!--begin::Card body-->
+        <div class="card-body">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Username</th>
+                <th scope="col">Done <i class="fa-solid fa-check"></i></th>
+                <th scope="col">Left <i class="fa-solid fa-hourglass"></i></th>
+                <th scope="col">Total</th>
+              </tr>
+            </thead>
+            <tbody> {% for transcriber_data in transcriber_counts %} <tr>
+                <td>{{ transcriber_data.transcriber.id }}</td>
+                <td>
+                                    {% if transcriber_data.is_online %}
+        <span style="color: #198754;font-size:12px">&#x25cf;</span>
+        {% else %}
+        <span style="color: #dc3545;font-size:12px">&#x25cf;</span>
+        {% endif %}
+      <a href="{% url 'transcriber_details' transcriber_data.transcriber.id %}">  {{ transcriber_data.transcriber.username }} </a>
+      </td>
+                </td>
+                 
+                <td>{{ transcriber_data.audio_files_done }} ({{ transcriber_data.done_duration_timedelta }}) </td>
+                <td>{{ transcriber_data.audio_files_left }} ({{ transcriber_data.left_duration_timedelta }}) </td>
+                <td>{{ transcriber_data.audio_files_total }} ({{ transcriber_data.total_duration_timedelta }}) </td>
+              </tr> {% endfor %} </tbody>
+          </table>
+        </div>
+        <!--end::Card body-->
+      </div>
+    </div>
+      <div class="row d-flex justify-content-center mt-5 mb-5">
+    <div class="col-md-4">
+      <div class="card  p-4">
+        <div class="card-header">
+          <div class="card-title d-flex flex-column">
+            <div class="d-flex justify-content-center">
+              <span class=" text-center">Audio files done vs Audio files left</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-2 pb-4 d-flex flex-wrap justify-content-center">
+          <div class="d-flex flex-column content-justify-center flex-row-fluid">
+            <div class="d-flex fw-semibold justify-content-center">
+      <canvas id="audioPieChart" ></canvas>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-4">
+        <div class="card-header">
+          <div class="card-title d-flex flex-column">
+            <div class="d-flex justify-content-center">
+              <span class=" text-center">Good transcriptions vs Bad Transcriptions </span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-2 pb-4 d-flex flex-wrap justify-content-center">
+          <div class="d-flex flex-column content-justify-center flex-row-fluid">
+            <div class="d-flex fw-semibold justify-content-center">
+      <canvas id="audioPieCharttwo"  ></canvas>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+    <script>
+      var audioFilesDone = {{num_audios_tobetranscribed}};
+      var audioFilesLeft = {{num_audios_tobereviewed}};
+      var ctx = document.getElementById('audioPieChart').getContext('2d');
+      var data = {
+        labels: ['Audio Files For transcriptions', 'Audio Files For Review',],
+        datasets: [{
+          data: [audioFilesDone, audioFilesLeft],
+          backgroundColor: ['#47be7d', '#ffc700'],
+          borderColor: '#fcfcfc',
+          borderWidth: 3,
+        }],
+      };
+      var audioPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: data,
+        
+        options: {
+            width: 400, // Specify the width
+            height: 300, // Specify the height
+            responsive: true, 
+            plugins: {
+            legend: {
+                position: 'none',
+                align: 'center',
+                fullSize: true,
+                labels:{
+                    boxHeight:5,
+                    useBorderRadius: true,
+                    borderRadius:100,
+                },
+            },
+        },},
+      });
+      
+      
+    </script>
+
+    <script>
+      var good = {{num_good_transcription}};
+      var bad = {{num_bad_transcription}};
+      var notyet = {{num_unverified_transcription}};
+      var ctxt = document.getElementById('audioPieCharttwo').getContext('2d');
+      
+      var datatwo = {
+        labels: ['Good Transcriptions', 'Bad Transcriptions', 'Unverified Transcriptions'],
+        datasets: [{
+          data: [good, bad, notyet],
+          backgroundColor: ['#47be7d', '#d9214e','#B5B5C3'],
+          borderColor: '#fcfcfc',
+          borderWidth: 3,
+        }],
+      };
+      var audioPieCharttwo = new Chart(ctxt, {
+        type: 'pie',
+        data: datatwo,
+        options: {
+            responsive: true, 
+            plugins: {
+            legend: {
+                position: 'none',
+                align: 'center',
+                fullSize: true,
+                labels:{
+                    boxHeight:5,
+                    useBorderRadius: true,
+                    borderRadius:100,
+                },
+            },
+        },},
+      });
+    </script>
+  </div>
+</div> {% endblock content %}

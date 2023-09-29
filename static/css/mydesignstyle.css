@@ -1,0 +1,168 @@
+.myplayerbutton {
+      background-color: transparent !important;
+      border: none !important;
+      font-size: 25px;
+    }
+
+    .icon-hidden {
+      display: none !important;
+    }
+
+    .edit-icon {
+      cursor: pointer;
+      color: #3498db;
+      margin-left: 10px;
+    }
+
+    .transcription-edit-container {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .transcript-status {
+      cursor: pointer;
+      color: #ccc;
+      /* Default color for inactive icons */
+    }
+
+    .transcript-status.active {
+      color: green;
+      /* Change to green when active */
+    }
+
+    #custom-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #progressBarContainer {
+      width: 100%;
+      height: 10px;
+      background-color: #ccc;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0;
+      background-color: #3498db;
+    }
+
+    .repetition-button {
+      border: 1px solid #ccc;
+      background-color: #fff;
+      padding: 5px 10px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+
+    .repetition-button.active {
+      background-color: #007bff;
+      color: #fff;
+      border-color: #007bff;
+    }
+
+    .speed-button {
+      border: 1px solid #ccc;
+      background-color: #fff;
+      padding: 5px 10px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+
+    .status-button.active {
+      background-color: #007bff;
+      color: #fff;
+      border-color: #007bff;
+    }
+
+    .status-button {
+      border: 1px solid #ccc;
+      background-color: #fff;
+      padding: 5px 10px;
+      margin-right: 5px;
+      width: 9%;
+      cursor: pointer;
+    }
+
+    .speed-button.active {
+      background-color: #007bff;
+      color: #fff;
+      border-color: #007bff;
+    }
+
+    .audio-player {
+      text-align: center;
+    }
+
+    .audio-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .audio-list li {
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    /* Define the style for the currently playing audio */
+    .playing {
+      background-color: #f5f5f5;
+      /* Change this to the desired highlight color */
+      color: #333;
+      /* Change this to the desired text color */
+      font-weight: bold;
+    }
+
+    /* Additional styling for the audio list items */
+    .audio-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .audio-list li {
+      padding: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .audio-list li:hover {
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    .highlited {
+      background-color: yellow;
+    }
+
+    td {
+      height: 80px !important;
+    }
+
+    /* This style applies to the textarea when it's in edit mode */
+    .edit-mode {
+      border: 2px solid blue;
+      /* Change the border color */
+      background-color: #f0f0f0;
+      /* Change the background color */
+      /* Add any other styling you want */
+    }
+
+    /* Add this to your stylesheet */
+    #progress-bar {
+      width: 0%;
+      cursor: pointer;
+    }
+
+    .active.green-icon {
+      color: green;
+    }
+
+    .active.red-icon {
+      color: red;
+    }
+
+  

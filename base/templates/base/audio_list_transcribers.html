@@ -1,0 +1,184 @@
+{% extends 'base/base.html' %}
+{% block content %}
+
+    <nav class="navbar navbar-light bg-light d-flex p-4">
+  <h3 class="mb-0 h4 col-md-5 d-flex justify-content-start" style="font-style:italic">Tal2text Transcribe</h3>
+<div style="float:right" class="col-md-6 d-flex justify-content-end">
+
+   <button type="button" class="btn btn-danger shadow" id="left-duration" > {{ left_duration_formatted }} left </button>
+   {% comment %} <button type="button" class="btn btn-warning shadow"  style="margin-left:10px;" id="total-duration" > {{ total_duration_formatted }} in total </button> {% endcomment %}
+   <button type="button" class="btn btn-success shadow"  style="margin-left:10px;" id="done-duration" > {{ done_duration_formatted }} done </button>
+
+  <button type="button" class="btn btn-secondary  shadow" style="margin-left:10px;" data-toggle="modal" data-target="#protocolModal">Protocol</button>
+  
+</div>
+</nav>
+
+
+    <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exportModalLabel">Export Transcription</h5>
+            <button type="button" class="close myplayerbutton" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <a href="{% url 'export_transcriptions' %}" class="btn btn-success" download>Export Transcriptions as ZIP</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="protocolModal" tabindex="-1" role="dialog" aria-labelledby="protocolModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="protocolModalModalLabel">Protocol</h5>
+            <button type="button" class="close myplayerbutton" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <h3> Words </h3> 
+            <p>
+            <ul>
+              <li> If there are a sequence of words that are incomprehensible, transcribe them as <span style="color:red;background-color:lightgrey"> &lt;unclear&gt; </span>
+              </li>
+              <li>The only allowed characters are all English alphabets <span style="color:red;background-color:lightgrey">(A-Z and a-z) </span>, fullstops (- ), question marks 2, commas , , apostrophes, left angular brace &lt;, and right angular brace &gt; </li>
+              <li>The left and right angular braces are only for special words such as: &lt;unclear&gt;, &lt;hmm&gt;, &lt;ah&gt;</li>
+            </ul>
+            </p>
+            <h3> Disfluencies </h3>
+            <p>
+            <ul>
+              <li>Filler words, such as: &lt;hmm&gt; needs to be transcribed and put between the angular braces </li>
+              <li>If a person starts uttering a word but does not finish it, we call them false starts. For example, if a person meant to say the word: feedback and cut it short and uttered only fee , then transcribe that as &lt;fee...&gt; </li>
+              <li>If a person is stuttering or repeating words, transcribe them as well. For example, if someone is stuttering as saying I I I want to thank you, then transcribe all the I's and add a dash right after teh preceding I's. In this case, teh transcription will look like: I- I- I want to thank you.</li>
+            </ul>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+      <div class="modal fade" id="replaceModal" tabindex="-1" role="dialog" aria-labelledby="replaceModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="replaceModalLabel">Find & Replace</h5>
+            <button type="button" class="close myplayerbutton" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+    <div>
+    <input type="text" id="findInput" class="form-control" style="width:100%" placeholder="Find">
+    <input type="text" id="replaceInput" class="form-control mt-2" placeholder="Replace">
+    <div class="d-flex justify-content-center">
+    <button id="findReplaceButton" class="btn btn-primary mt-2">Find & Replace</button>
+    </div>
+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+    <div class="d-flex justify-content-center mt-4">
+  <button class="status-button {% if selected_status == 'All' or not selected_status %}active{% endif %}" name="status" value="All">All</button>
+  <button class="status-button {% if selected_status == 'GOOD' %}active{% endif %}" name="status" value="GOOD">Good</button>
+  <button class="status-button {% if selected_status == 'BAD' %}active{% endif %}" name="status" value="BAD">Bad</button>
+  <button class="status-button {% if selected_status == 'unverified' %}active{% endif %}" name="status" value="unverified">Unverified</button>
+    </div>
+
+
+    <div class="container table-responsive py-4">
+      <table class="table table-bordered table-hover" style="width: auto !important">
+        <thead>
+          <th scope="row">#</th>
+          <th scope="row"></th>
+          <th scope="row" style="width:900px !important;">Transcription</th>
+        </thead>
+        <tbody> {% for audio in audio_files %} <tr class="audio-row">
+            <th scope="row">{{ audio.id }}</th>
+            <td>
+              <audio controls id="player-{{ audio.id }}" class='d-flex justify-content-center align-items-center'>
+                <source src="{{ audio.audio_file.url }}" type="audio/mp3"> Your browser does not support the audio element.
+              </audio>
+            </td>
+            <td style="padding:0px !important;">
+              <div class="transcription-container">
+                <textarea class="transcription-text form-control myTextarea" style="border:none !important; height:80px;    overflow: hidden; /* Hide any overflow content */
+                resize: none; /* Disable textarea resizing */; border-radius:0px !important; background-color:inherit !important" data-audio-id="{{ audio.id }}" style="width:100%; height:auto !important">{{ audio.transcription.text }}</textarea>
+                <span class="edit-icon" style="display: none;">
+                  <i class="fas fa-edit"></i>
+                </span>
+              </div>
+            </td>
+
+          </tr> {% endfor %} 
+        </tbody>
+      </table>
+      <div class="d-flex justify-content-center" style="position:relative !important; z-index:2;margin-bottom:50px;">
+        <nav aria-label="Page navigation example">
+          <ul class="pagination"> {% if audio_files.has_previous %} <li class="page-item">
+              <a class="page-link" href="?page={{ audio_files.previous_page_number }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li> {% endif %} {% for page_num in audio_files.paginator.page_range %} {% if audio_files.number == page_num %} <li class="page-item active">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num == audio_files.paginator.page_range.start %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num == audio_files.paginator.page_range.stop %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% elif page_num > audio_files.number|add:'-2' and page_num < audio_files.number|add:'5' %} <li class="page-item">
+              <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+            </li> {% endif %} {% endfor %} {% if audio_files.has_next %} <li class="page-item">
+              <a class="page-link" href="?page={{ audio_files.next_page_number }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li> {% endif %} </ul>
+        </nav>
+      </div>
+      <footer class="footer navbar-light bg-light d-flex justify-content-center fixed-bottom" style="height:auto;">
+        <div class="audio-player" class="d-flex justify-content-center" style="width:100%">
+          <div id="progress-bar-container" style="     --tw-bg-opacity: 1;   background-color: rgb(227 232 239/var(--tw-bg-opacity));">
+            <div id="progress-bar" style="background-color:#0d6efd;height:5px;cursor:pointer"></div>
+          </div>
+          <nav class="audio-navigation" style="    display: block;
+          width: 100%;
+          padding: 15px;">
+            <audio id="audio-element" style="display:none" controls> Your browser does not support the audio element. </audio> {% comment %} <button id="prev-button">&larr; Previous</button> {% endcomment %} <button id="prev-button" style="" class="myplayerbutton">
+              <i class="fas fa-angle-left"></i>
+            </button>
+            <button id="play-button" class="myplayerbutton">
+              <i class="fa fa-play"></i>
+            </button>
+            <button id="pause-button" class="myplayerbutton">
+              <i class="fa fa-pause"></i>
+            </button>
+            <button id="next-button" class="myplayerbutton" style="">
+              <i class="fas fa-angle-right"></i>
+            </button>
+            <div style="float:left; width:auto;" class="d-flex">
+
+                        <button type="button" class="btn btn-primary" data-toggle="modal"  data-target="#replaceModal">Find & Replace</button>
+
+            </div>
+           
+            <div style="float:right">
+              <label for="speed" style="margin-right: 10px;">Speed:</label>
+              <button class="speed-button {% if selected_speed == '0.5' %}active{% endif %}" name="speed" value="0.5">x0.5</button>
+              <button class="speed-button {% if selected_speed == '0.75' %}active{% endif %}" name="speed" value="0.75">x0.75</button>
+              <button class="speed-button {% if selected_speed == '1' %}active{% endif %}" name="speed" value="1">x1</button>
+            </div>
+          </nav>
+          <ul class="audio-list" style="display:none"> {% for audio in audio_files %} <li data-src="{{ audio.audio_file.url }}">Audio {{forloop.counter}}</li> {% endfor %}
+            <!-- Add more audio files as needed -->
+          </ul>
+        </div>
+      </footer>
+
+{% endblock content %}
